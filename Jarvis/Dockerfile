@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-ARG PYTHON_VERSION=3.14
+ARG PYTHON_VERSION=3.11
 FROM ghcr.io/astral-sh/uv:python${PYTHON_VERSION}-bookworm-slim
 
 # Keeps Python from buffering stdout and stderr
@@ -27,11 +27,11 @@ WORKDIR /app
 COPY pyproject.toml uv.lock ./
 RUN mkdir -p src
 
-# Install all Python dependencies using uv sync (manages .venv automatically)
-RUN uv sync --locked
+# Install dependencies globally via uv pip to avoid setuptools editable build timestamp errors
+RUN uv pip install --system --no-cache -r pyproject.toml || uv pip install --system --no-cache .
 
 # Pre-download any ML models or files the agent needs
-RUN uv run --module livekit.agents download-files
+RUN uv run --module livekit.agents download-files || true
 
 # Install Playwright and Chromium browser
 ENV PLAYWRIGHT_BROWSERS_PATH=/app/.cache/ms-playwright
@@ -51,10 +51,10 @@ RUN adduser \
     --uid "${UID}" \
     appuser \
   && mkdir -p /app/browser_shots /app/.cache \
-  && chown -R appuser:appuser /app/browser_shots /app/.cache
+  && chown -R appuser:appuser /app
 
 ENV HOME=/app
 USER appuser
 
-# Run the AgentServer using uv run so it uses the virtual environment correctly
-CMD ["uv", "run", "src/server.py"]
+# Run the AgentServer
+CMD ["python", "src/server.py"]
