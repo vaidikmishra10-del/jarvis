@@ -14,6 +14,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     nodejs \
     npm \
     libsndfile1 \
+    ffmpeg \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -32,4 +33,4 @@ RUN uv run python -m playwright install --with-deps chromium
 COPY . .
 
 # Run the agent server
-CMD ["python", "src/server.py"]
+CMD ["python", "src/agent.py"]
