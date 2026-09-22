@@ -1,36 +1,60 @@
-# syntax=docker/dockerfile:1
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
 
-ARG PYTHON_VERSION=3.11
-FROM ghcr.io/astral-sh/uv:python${PYTHON_VERSION}-bookworm-slim
+[project]
+name = "agent-starter-python"
+version = "1.0.0"
+description = "Simple voice AI assistant built with LiveKit Agents for Python"
+requires-python = ">=3.10, <3.15"
 
-ENV PYTHONUNBUFFERED=1
-ENV UV_COMPILE_BYTECODE=1
+dependencies = [
+    "ddgs>=9.16.0",
+    "langchain-community>=0.4.2",
+    "livekit-agents[google,images,mcp]~=1.5",
+    "livekit-plugins-ai-coustics~=0.2",
+    "playwright>=1.48",
+    "python-dotenv",
+    "soundfile>=0.14.0",
+    "speechbrain",
+    "torch",
+    "torchaudio",
+]
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    g++ \
-    python3-dev \
-    nodejs \
-    npm \
-    libsndfile1 \
-    ffmpeg \
-  && rm -rf /var/lib/apt/lists/*
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "ruff",
+]
 
-WORKDIR /app
+[tool.uv]
+constraint-dependencies = ["yarl<1.24"]
 
-# Copy dependency configuration files
-COPY pyproject.toml uv.lock ./
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+torchaudio = { index = "pytorch-cpu" }
 
-# Install dependencies globally using uv pip to skip editable build errors
-RUN uv pip install --system --no-cache .
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
 
-# Install Playwright and Chromium browser
-ENV PLAYWRIGHT_BROWSERS_PATH=/app/.cache/ms-playwright
-RUN uv run python -m playwright install --with-deps chromium
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+markers = [
+    "browser: requires installed Chromium (run `uv run playwright install chromium`)",
+]
 
-# Copy remaining source code
-COPY . .
+[tool.ruff]
+line-length = 88
+target-version = "py39"
 
-# Run the agent server
-CMD ["python", "src/agent.py"]
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "B", "A", "C4", "UP", "SIM", "RUF"]
+ignore = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
