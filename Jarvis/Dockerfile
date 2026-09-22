@@ -21,7 +21,7 @@ WORKDIR /app
 # Copy dependency configuration files
 COPY pyproject.toml uv.lock ./
 
-# Install dependencies globally using uv pip (skips editable package build issue)
+# Install dependencies globally using uv pip to skip editable build errors
 RUN uv pip install --system --no-cache .
 
 # Install Playwright and Chromium browser
