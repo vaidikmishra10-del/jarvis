@@ -16,6 +16,7 @@ dependencies = [
     "playwright>=1.48",
     "python-dotenv",
     "soundfile>=0.14.0",
+    "torch",
 ]
 
 [dependency-groups]
@@ -27,6 +28,14 @@ dev = [
 
 [tool.uv]
 constraint-dependencies = ["yarl<1.24"]
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
